@@ -1,8 +1,17 @@
 // user schema and model defination
 import mongoose from "mongoose";
+import {
+  comparePassword,
+  hashPassword,
+} from "../../../utils/validations/bcrypt.helper";
+import { IUser } from "../../../types/user/user.types";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../../utils/validations/jwt.helper";
 
 // user schema defination (user model defination)
-const userSchema = new mongoose.Schema({
+export const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -10,24 +19,49 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    // validate: {
-    //   validator: function (value: string) {
-    //     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-    //   },
-    //   message: "Invalid email format",
-    // },
   },
   password: {
     type: String,
     required: true,
   },
-  role: {
+  accessToken: {
     type: String,
-    required: true,
+    required: false,
+  },
+  refreshToken: {
+    type: String,
+    required: false,
   },
 });
 
-// creating user model
-const User = mongoose.model("User", userSchema);
+//  save user password hash
+userSchema.pre("save", async function (next) {
+  if (this.isModified("password") && this.password) {
+    this.password = (await hashPassword(this.password)) || "";
+  }
+  next();
+});
 
-export default User;
+// schema method for checking password
+userSchema.methods.checkPassword = async function (password: string) {
+  const result = await comparePassword(password, this.password);
+  if (result) {
+    return true;
+  }
+  return false;
+};
+
+// schema method for generating user access token
+userSchema.methods.generateAcccessToken = async function () {
+  const token = await generateAccessToken(this);
+  console.log(token, "access token");
+  this.accessToken = token;
+};
+
+userSchema.methods.generateRefreshToken = async function () {
+  const token = await generateRefreshToken(this);
+  console.log(token, "refresh token");
+  this.refreshToken = token;
+};
+// creating user model
+export const User = mongoose.model<IUser>("User", userSchema);
