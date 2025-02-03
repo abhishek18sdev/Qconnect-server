@@ -5,7 +5,8 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { connectDatabase } from "./database";
 import bodyParser from "body-parser";
-import {router as userRouter} from "../src/modules/user/routes/index";
+import { router as userRouter } from "../src/modules/user/routes/index";
+import responseMiddleware from "./utils/response/response.helper";
 
 // loading env variables
 dotenv.config();
@@ -22,12 +23,14 @@ server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
 server.use(express.static("public"));
 
+// global response middleware 
+server.use(responseMiddleware);
 // setting up the port for the server
 const port = process.env.PORT || 3000;
 
 // testing endpoint
 server.get("/", (req: Request, res: Response) => {
-  res.send("Hello World");
+  res.sendResponse({ message: "Hello, world!" });
 });
 
 // user routes
