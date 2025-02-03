@@ -5,6 +5,7 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { connectDatabase } from "./database";
 import bodyParser from "body-parser";
+import {router as userRouter} from "../src/modules/user/routes/index";
 
 // loading env variables
 dotenv.config();
@@ -26,9 +27,11 @@ const port = process.env.PORT || 3000;
 
 // testing endpoint
 server.get("/", (req: Request, res: Response) => {
-   res.send("Hello World");
+  res.send("Hello World");
 });
 
+// user routes
+server.use("/", userRouter);
 // listening to the server on the port
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
